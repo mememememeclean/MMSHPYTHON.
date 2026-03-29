@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Nixium Studio — Лобби проектов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', 'JetBrains Mono', monospace;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0a0c15 0%, #12142a 50%, #1e1a3a 100%);
+            color: #f0eef7;
+            overflow-x: hidden;
+        }
+
+        /* Анимированный фон */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: float 20s ease-in-out infinite;
+        }
+
+        .orb-1 {
+            width: 500px;
+            height: 500px;
+            background: rgba(139, 92, 246, 0.4);
+            top: -150px;
+            left: -150px;
+        }
+
+        .orb-2 {
+            width: 600px;
+            height: 600px;
+            background: rgba(168, 85, 247, 0.3);
+            bottom: -200px;
+            right: -200px;
+            animation-delay: -5s;
+        }
+
+        .orb-3 {
+            width: 450px;
+            height: 450px;
+            background: rgba(192, 132, 252, 0.35);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(50px, -50px) scale(1.1); }
+            66% { transform: translate(-40px, 40px) scale(0.9); }
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+        .particle {
+            position: absolute;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.6), transparent);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: floatParticle linear infinite;
+        }
+
+        @keyframes floatParticle {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-100vh) rotate(360deg); opacity: 0; }
+        }
+
+        /* Контейнер */
+        .lobby-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Хедер */
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: slideDown 0.6s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            display: inline-block;
+            animation: bounce 2s ease-in-out infinite, glowPulse 3s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(139, 92, 246, 0.5)); }
+            50% { filter: drop-shadow(0 0 20px rgba(139, 92, 246, 0.8)); }
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #8b5cf6, #c084fc, #ec489a);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 10px;
+            animation: gradientShift 4s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: 0.9rem;
+            color: #c084fc;
+            letter-spacing: 1px;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Панель создания */
+        .create-panel {
+            background: rgba(8, 6, 13, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 25px;
+            margin-bottom: 35px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            animation: fadeInScale 0.5s ease-out;
+            transition: all 0.3s;
+        }
+
+        @keyframes fadeInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .create-panel:hover {
+            border-color: rgba(139, 92, 246, 0.6);
+            box-shadow: 0 0 25px rgba(139, 92, 246, 0.15);
+        }
+
+        .create-title {
+            font-size: 1.3rem;
+            margin-bottom: 18px;
+            color: #8b5cf6;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .create-form {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .project-input {
+            flex: 1;
+            min-width: 220px;
+            padding: 12px 20px;
+            background: rgba(5, 3, 10, 0.8);
+            border: 2px solid rgba(139, 92, 246, 0.5);
+            border-radius: 40px;
+            color: #f0eef7;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+        }
+
+        .project-input:focus {
+            outline: none;
+            border-color: #8b5cf6;
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.3);
+            transform: scale(1.01);
+        }
+
+        .project-input::placeholder {
+            color: rgba(192, 132, 252, 0.5);
+        }
+
+        .btn-create {
+            padding: 12px 28px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            border: none;
+            border-radius: 40px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-create::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.4s, height 0.4s;
+        }
+
+        .btn-create:hover::before {
+            width: 200px;
+            height: 200px;
+        }
+
+        .btn-create:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 20px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-create:active {
+            transform: scale(0.98);
+        }
+
+        .import-area {
+            border-top: 1px solid rgba(139, 92, 246, 0.3);
+            padding-top: 20px;
+        }
+
+        .import-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 24px;
+            background: rgba(139, 92, 246, 0.2);
+            border: 2px dashed #8b5cf6;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .import-label::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .import-label:hover::after {
+            left: 100%;
+        }
+
+        .import-label:hover {
+            background: rgba(139, 92, 246, 0.4);
+            transform: scale(1.02);
+        }
+
+        .import-input {
+            display: none;
+        }
+
+        /* Секция проектов */
+        .projects-section {
+            flex: 1;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #c084fc;
+            border-left: 4px solid #8b5cf6;
+            padding-left: 18px;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .project-card {
+            background: rgba(8, 6, 13, 0.7);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            cursor: pointer;
+            animation: cardAppear 0.5s ease-out backwards;
+            animation-delay: calc(var(--card-index, 0) * 0.05s);
+        }
+
+        @keyframes cardAppear {
+            from {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .project-card:hover {
+            transform: translateY(-6px) scale(1.01);
+            border-color: #8b5cf6;
+            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.25);
+        }
+
+        .project-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #8b5cf6;
+            word-break: break-word;
+            margin-bottom: 8px;
+            transition: color 0.3s;
+        }
+
+        .project-card:hover .project-name {
+            color: #c084fc;
+        }
+
+        .project-date {
+            font-size: 0.65rem;
+            color: #888;
+            margin-bottom: 12px;
+        }
+
+        .project-preview {
+            font-size: 0.75rem;
+            color: #c084fc;
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 10px;
+            border-radius: 10px;
+            margin: 12px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            transition: all 0.3s;
+        }
+
+        .project-card:hover .project-preview {
+            background: rgba(139, 92, 246, 0.15);
+            color: #ec489a;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .btn-open, .btn-delete {
+            transition: all 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-open {
+            flex: 2;
+            padding: 8px;
+            background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.75rem;
+        }
+
+        .btn-open:hover {
+            transform: scale(1.03);
+            box-shadow: 0 3px 12px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-open:active {
+            transform: scale(0.98);
+        }
+
+        .btn-delete {
+            flex: 1;
+            padding: 8px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid #ef4444;
+            border-radius: 25px;
+            color: #ef4444;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.75rem;
+        }
+
+        .btn-delete:hover {
+            background: #ef4444;
+            color: white;
+            transform: scale(1.03);
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn-delete:active {
+            transform: scale(0.98);
+        }
+
+        .empty-projects {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px;
+            color: #888;
+            font-size: 1rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Тема */
+        .theme-switch {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .theme-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(8, 6, 13, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid #8b5cf6;
+            cursor: pointer;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+
+        .theme-btn:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+        }
+
+        .theme-btn:active {
+            transform: scale(0.95);
+        }
+
+        body.light {
+            background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 50%, #fae8ff 100%);
+            color: #2d1f3a;
+        }
+
+        body.light .create-panel,
+        body.light .project-card {
+            background: rgba(255, 252, 245, 0.85);
+        }
+
+        body.light .project-input {
+            background: rgba(255, 250, 240, 0.9);
+            color: #2d1f3a;
+        }
+
+        body.light .project-preview {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* Уведомления */
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-family: monospace;
+            z-index: 1000;
+            animation: slideInRight 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1), fadeOut 0.3s ease-out 2.2s forwards;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            font-weight: 500;
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateX(50px);
+                visibility: hidden;
+            }
+        }
+
+        .notification.success { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .notification.error { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .notification.info { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; }
+
+        /* Анимация для карточек при удалении */
+        .card-removing {
+            animation: cardRemove 0.3s ease-out forwards !important;
+        }
+
+        @keyframes cardRemove {
+            to {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="particles" id="particles"></div>
+
+    <div class="theme-switch">
+        <div class="theme-btn" id="themeBtn">🌙</div>
+    </div>
+
+    <div class="lobby-container">
+        <div class="header">
+            <div class="logo">🐢✨</div>
+            <h1>MMSHPython</h1>
+            <div class="subtitle">мод на MSHPython.online | Импорт .py</div>
+        </div>
+
+        <div class="create-panel">
+            <div class="create-title">
+                <span>📁</span> Создать новый проект
+            </div>
+            <div class="create-form">
+                <input type="text" class="project-input" id="projectNameInput" placeholder="Название проекта...">
+                <button class="btn-create" id="createProjectBtn">✨ Создать</button>
+            </div>
+            <div class="import-area">
+                <label class="import-label" id="importLabel">
+                    📂 Импортировать .py файл
+                    <input type="file" id="importFileInput" class="import-input" accept=".py">
+                </label>
+            </div>
+        </div>
+
+        <div class="projects-section">
+            <div class="section-title">📂 Мои проекты</div>
+            <div class="projects-grid" id="projectsGrid">
+                <div class="empty-projects">✨ Нет проектов. Создайте первый!</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== УПРАВЛЕНИЕ ПРОЕКТАМИ ==========
+        let projects = [];
+
+        // Загрузка из localStorage
+        function loadProjects() {
+            try {
+                const saved = localStorage.getItem('nixium_projects');
+                if (saved) {
+                    projects = JSON.parse(saved);
+                } else {
+                    projects = [{
+                        id: Date.now(),
+                        name: 'Мой первый проект',
+                        code: `from turtle import *\n\n# Создаем черепашку\nt = Turtle()\nt.shape("turtle")\nt.color("#8b5cf6")\nt.speed(6)\n\n# Рисуем спираль\nfor i in range(100):\n    t.forward(i)\n    t.right(91)\n\n# Пишем текст\nt.penup()\nt.goto(-100, 150)\nt.pendown()\nt.color("#ec489a")\nt.write("Привет, Nixium!", font=("Arial", 14, "bold"))\n\nt.hideturtle()\ndone()`,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    }];
+                    saveProjects();
+                }
+            } catch(e) {
+                console.error('Ошибка загрузки:', e);
+                projects = [];
+            }
+            renderProjects();
+        }
+
+        function saveProjects() {
+            localStorage.setItem('nixium_projects', JSON.stringify(projects));
+        }
+
+        function createProject(name) {
+            if (!name || name.trim() === '') {
+                name = `Проект ${new Date().toLocaleDateString('ru-RU')}`;
+            }
+            
+            const defaultCode = `from turtle import *\n\n# Создаем черепашку\nt = Turtle()\nt.shape("turtle")\nt.color("#8b5cf6")\nt.speed(6)\n\n# Рисуем звезду\nfor i in range(5):\n    t.forward(100)\n    t.right(144)\n\n# Пишем название проекта\nt.penup()\nt.goto(-50, -80)\nt.pendown()\nt.color("#ec489a")\nt.write("${name.replace(/"/g, '\\"')}", font=("Arial", 12, "bold"))\n\nt.hideturtle()\ndone()`;
+            
+            const newProject = {
+                id: Date.now(),
+                name: name.trim(),
+                code: defaultCode,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            };
+            
+            projects.unshift(newProject);
+            saveProjects();
+            renderProjects();
+            showNotification(`✓ Проект "${name}" создан`, 'success');
+            
+            // Анимация для новой карточки
+            const firstCard = document.querySelector('.project-card');
+            if (firstCard) {
+                firstCard.style.animation = 'none';
+                firstCard.offsetHeight;
+                firstCard.style.animation = 'cardAppear 0.5s ease-out';
+            }
+        }
+
+        function importFromPyFile(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                let fileName = file.name.replace(/\.py$/i, '');
+                if (fileName.length > 30) fileName = fileName.substring(0, 27) + '...';
+                
+                const newProject = {
+                    id: Date.now(),
+                    name: fileName,
+                    code: content,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+                projects.unshift(newProject);
+                saveProjects();
+                renderProjects();
+                showNotification(`✓ Импортирован: ${fileName}`, 'success');
+            };
+            reader.onerror = function() {
+                showNotification('✗ Ошибка при импорте файла', 'error');
+            };
+            reader.readAsText(file);
+        }
+
+        function deleteProject(id, event) {
+            event.stopPropagation();
+            
+            // Находим карточку для анимации удаления
+            const card = event.target.closest('.project-card');
+            if (card) {
+                card.style.animation = 'cardRemove 0.3s ease-out forwards';
+                setTimeout(() => {
+                    projects = projects.filter(p => p.id !== id);
+                    saveProjects();
+                    renderProjects();
+                    showNotification('✓ Проект удален', 'info');
+                }, 280);
+            } else {
+                projects = projects.filter(p => p.id !== id);
+                saveProjects();
+                renderProjects();
+                showNotification('✓ Проект удален', 'info');
+            }
+        }
+
+        function openProject(project) {
+            try {
+                localStorage.setItem('nixium_active_project', JSON.stringify(project));
+                window.location.href = '/MSHPython%20mod/assets/index.html';
+            } catch(e) {
+                showNotification('✗ Ошибка открытия проекта', 'error');
+            }
+        }
+
+        function renderProjects() {
+            const grid = document.getElementById('projectsGrid');
+            if (!grid) return;
+            
+            if (!projects || projects.length === 0) {
+                grid.innerHTML = '<div class="empty-projects">✨ Нет проектов. Создайте первый проект!</div>';
+                return;
+            }
+            
+            grid.innerHTML = projects.map((project, index) => {
+                const date = new Date(project.updatedAt).toLocaleDateString('ru-RU');
+                const preview = (project.code || '').split('\n').slice(0, 2).join(' ').substring(0, 70) + '...';
+                const safeName = escapeHtml(project.name);
+                const safePreview = escapeHtml(preview);
+                
+                return `
+                    <div class="project-card" data-id="${project.id}" style="--card-index: ${index}" onclick="openProject(${JSON.stringify(project).replace(/"/g, '&quot;')})">
+                        <div class="project-name">🐢 ${safeName}</div>
+                        <div class="project-date">📅 ${date}</div>
+                        <div class="project-preview">${safePreview}</div>
+                        <div class="project-actions">
+                            <button class="btn-open" onclick="event.stopPropagation(); openProject(${JSON.stringify(project).replace(/"/g, '&quot;')})">🚀 Открыть</button>
+                            <button class="btn-delete" onclick="deleteProject(${project.id}, event)">🗑 Удалить</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+
+        let notificationTimeout = null;
+        function showNotification(message, type = 'info') {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            if (notificationTimeout) clearTimeout(notificationTimeout);
+            notificationTimeout = setTimeout(() => {
+                if (notification) notification.remove();
+            }, 2500);
+        }
+
+        function createParticles() {
+            const container = document.getElementById('particles');
+            if (!container) return;
+            for (let i = 0; i < 60; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = Math.random() * 5 + 2;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.animationDuration = Math.random() * 12 + 6 + 's';
+                p.style.animationDelay = Math.random() * 8 + 's';
+                p.style.opacity = Math.random() * 0.5 + 0.2;
+                container.appendChild(p);
+            }
+        }
+
+        function setTheme(theme) {
+            document.body.classList.remove('light');
+            if (theme === 'light') {
+                document.body.classList.add('light');
+                document.getElementById('themeBtn').textContent = '☀️';
+                localStorage.setItem('nixium_theme', 'light');
+            } else {
+                document.getElementById('themeBtn').textContent = '🌙';
+                localStorage.setItem('nixium_theme', 'dark');
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            createParticles();
+            loadProjects();
+            
+            document.getElementById('createProjectBtn').onclick = () => {
+                const input = document.getElementById('projectNameInput');
+                createProject(input.value);
+                input.value = '';
+                input.focus();
+            };
+            
+            document.getElementById('projectNameInput').onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    createProject(e.target.value);
+                    e.target.value = '';
+                }
+            };
+            
+            document.getElementById('importFileInput').onchange = (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    importFromPyFile(e.target.files[0]);
+                }
+                e.target.value = '';
+            };
+            
+            const themeBtn = document.getElementById('themeBtn');
+            if (themeBtn) {
+                themeBtn.onclick = () => {
+                    const isLight = document.body.classList.contains('light');
+                    setTheme(isLight ? 'dark' : 'light');
+                };
+            }
+            
+            const savedTheme = localStorage.getItem('nixium_theme');
+            if (savedTheme === 'light') setTheme('light');
+        });
+    </script>
+</body>
+</html>
